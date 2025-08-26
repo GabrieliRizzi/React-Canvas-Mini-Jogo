@@ -1,0 +1,12 @@
+body {
+  font-family: Arial, sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin: 16px;
+}
+canvas {
+  border: 1px solid #222;
+  display: block;
+  background: linear-gradient(#111, #333);
+}
