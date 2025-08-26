@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>React + Canvas — Demo (Babel CDN)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + ReactDOM (UMD builds) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel standalone para transformar JSX no browser (apenas para protótipo) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- App em JSX (transformado pelo Babel no browser) -->
+  <script type="text/babel">
+    const { useRef, useEffect } = React;
+
+    function App() {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width = 800;
+        const h = canvas.height = 500;
+
+        const player = { x: 40, y: h/2 - 20, w: 40, h: 40 };
+        const bullets = [];
+        const keys = {};
+
+        function spawnBullet() {
+          bullets.push({ x: player.x + player.w, y: player.y + player.h/2 - 4, vx: 6 });
+        }
+
+        function onKeyDown(e) {
+          keys[e.key] = true;
+          if (e.key === ' ') {
+            spawnBullet();
+            // prevenir scroll da página quando aperta espaço
+            e.preventDefault();
+          }
+        }
+        function onKeyUp(e) { keys[e.key] = false; }
+
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+
+        let raf;
+        function loop() {
+          // controles
+          if (keys.ArrowUp || keys['w']) player.y -= 4;
+          if (keys.ArrowDown || keys['s']) player.y += 4;
+          // limitar
+          player.y = Math.max(0, Math.min(h - player.h, player.y));
+
+          // mover balas
+          for (let i = bullets.length - 1; i >= 0; i--) {
+            bullets[i].x += bullets[i].vx;
+            if (bullets[i].x > w + 20) bullets.splice(i, 1);
+          }
+
+          // desenhar
+          ctx.clearRect(0, 0, w, h);
+          // jogador
+          ctx.fillStyle = '#00aaff';
+          ctx.fillRect(player.x, player.y, player.w, player.h);
+          // balas
+          ctx.fillStyle = '#ffd700';
+          bullets.forEach(b => ctx.fillRect(b.x, b.y, 12, 8));
+
+          raf = requestAnimationFrame(loop);
+        }
+        loop();
+
+        // cleanup
+        return () => {
+          cancelAnimationFrame(raf);
+          window.removeEventListener('keydown', onKeyDown);
+          window.removeEventListener('keyup', onKeyUp);
+        };
+      }, []);
+
+      return (
+        <div style={{ textAlign:'center' }}>
+          <h1>React + Canvas — Jogo simples</h1>
+          <p>Use ↑ ↓ (ou W/S) para mover e [espaço] para atirar</p>
+          <canvas ref={canvasRef} style={{ width: '800px', height: '500px' }} />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
